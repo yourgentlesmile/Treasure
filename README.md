@@ -30,3 +30,13 @@ net.ipv4.tcp_syncookies = 1 表示开启SYN Cookies。当出现SYN等待队列�
 net.ipv4.tcp_tw_reuse = 1    表示开启重用。允许将TIME-WAIT sockets重新用于新的TCP连接，默认为0，表示关闭  
 net.ipv4.tcp_tw_recycle = 1  表示开启TCP连接中TIME-WAIT sockets的快速回收，默认为0，表示关闭  
 net.ipv4.tcp_fin_timeout=30修改系統默认的 TIMEOUT 时间  
+
+## redis使用redis-trib 组建集群
+`./redis-trib.rb create --replicas 1 192.168.1.68:6001 192.168.1.68:6002 192.168.1.69:6003 192.168.1.69:6004 192.168.1.170:6005 192.168.1.170:6006`
+
+## zookeeper配置快照与事务日志自动清理
+在zookeeper中，如果不配置自动清理，zookeeper不会对这两项的数据文件进行清理操作，从而导致将服务器磁盘打满的状况，进而引起依赖zookeeper的相关应用报错而停止工作。  
+`autopurge.snapRetainCount=10`需要保留的文件数  
+`autopurge.purgeInterval=48`单位：小时，清理频率。保留48小时内的日志  
+## 关于nohup 与 & 
+使用了nohup之后，很多人就这样不管了，其实这样有可能在当前账户非正常退出或者结束的时候，命令还是自己结束了。所以在使用nohup命令后台运行命令之后，需要使用exit正常退出当前账户，这样才能保证命令一直在后台运行。
