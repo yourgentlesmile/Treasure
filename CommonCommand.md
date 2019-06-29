@@ -18,3 +18,35 @@
 `dhclient wlo1` 使用dhcp为wlo1网卡获得IP地址  
 `chown [OPTION]... [OWNER][:[GROUP]] FILE...` 更改文件的属主和属组  
 `mkdir -p /usr/bin/test/s`  创建目录，如果父级目录没创建则会一并创建  
+## 创建LVM
+> 背景：Centos下有3块硬盘，每个20G，现在都要将这三块硬盘都挂载在app下，因此，需要使用LVM将三块硬盘合在一起
+
+使用**lvm2**进行相关操作，`yum install lvm2 -y`  
+1、先使用`fdisk -l`确定三块硬盘的名字，这里分别是`/dev/vdb /dev/vdc /dev/vdd`
+2、`pvcreate`命令 用于将物理硬盘分区初始化为物理卷，以便LVM使用  
+使用该命令来创建物理卷`pvcreate /dev/vd{b,c,d}`  
+3、`vgcreate`命令用于创建LVM卷组创建并物理卷加入卷组  
+使用该命令来创建卷组`vgcreate hadoop /dev/vdb /dev/vdc /dev/vdd` 其中hadoop是卷组名  
+4、`lvcreate`命令用于在LVM卷组上创建逻辑卷  
+使用该命令来创建逻辑卷`lvcreate -n hadooplv -l 100%VG hadoop` 其中hadooplv是逻辑卷的名字，-l 后跟百分数表示分配卷组空间的百分比给这个逻辑卷，hadoop是物理卷名，表示在此卷组上分配逻辑卷  
+5、`mkfs.ext4`命令用于格式化逻辑卷为ext4格式  
+使用该命令格式化逻辑卷hadooplv，`mkfs.ext4 -m 0.01 /dev/hadoop/hadooplv`,此处，`-m`表示调整保留空间为总空间的0.01% ，`/dev/hadoop/hadooplv`是需要格式化的逻辑卷名。  
+在ext4分区中，如果未指定`-m`参数，则默认是设置保留空间为总空间的**5%**  
+6、使用`mount`命令将新创建的逻辑卷挂载到指定目录下`mount /dev/hadoop/hadooplv /opt`  
+7、 blkid是查看卷的唯一UUID，用于开启自动挂载  
+8、编辑`/etc/fstab`文件，将新挂载的硬盘添加进去，就能开机挂载`UUID=f68612d6-bf27-46d3-81da-1a5f395e9541  /opt     ext4   defaults    0 0`
+该文件内第一列是卷的UUID  
+第二列是挂载点  
+第三列是此分区的文件系统类型  
+第四列是挂载的选项  
+> auto: 系统自动挂载，fstab默认就是这个选项
+defaults: rw, suid, dev, exec, auto, nouser, and async.
+noauto 开机不自动挂载
+nouser 只有超级用户可以挂载
+ro 按只读权限挂载
+rw 按可读可写权限挂载
+user 任何用户都可以挂载
+请注意光驱和软驱只有在装有介质时才可以进行挂载，因此它是noauto  
+
+第五列是dump备份设置,当其值设置为1时，将允许dump备份程序备份；设置为0时，忽略备份操作  
+第六列是fsck磁盘检查设置，其值是一个顺序。当其值为0时，永远不检查；而 / 根目录分区永远都为1。其它分区从2开始，数字越小越先检查，如果两个分区的数字相同，则同时检查  
