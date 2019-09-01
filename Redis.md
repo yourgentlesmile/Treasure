@@ -16,7 +16,7 @@ net.ipv4.tcp_fin_timeout=30修改系統默认的 TIMEOUT 时间
 
 # redis中 redis-trib 的使用
 参考博客  
-http://www.cnblogs.com/PatrickLiu/p/8484784.html?spm=5176.11156381.0.0.415979f5OT4Yjo
+http://www.cnblogs.com/PatrickLiu/p/8484784.html?spm=5176.11156381.0.0.415979f5OT4Yjo  
 redis-trib基本命令  
 ```
 create          host1:port1 ... hostN:portN

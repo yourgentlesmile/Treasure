@@ -18,6 +18,10 @@
 `dhclient wlo1` 使用dhcp为wlo1网卡获得IP地址  
 `chown [OPTION]... [OWNER][:[GROUP]] FILE...` 更改文件的属主和属组  
 `mkdir -p /usr/bin/test/s`  创建目录，如果父级目录没创建则会一并创建  
+`useradd -d /app/hadoop hadoop` 创建hadoop用户，并制定用户主目录为`/app/hadoop`  
+`ssh-copy-id -i ~/.ssh/id_rsa.pub 用户名@ip`  讲自己的公钥传到目标机器，达到免密的作用  
+`ls /opt/*.tar | xargs -n1 -I {} mv {} /opt/installer `批量移动特定文件到某个文件夹  
+
 ## 创建LVM
 > 背景：Centos下有3块硬盘，每个20G，现在都要将这三块硬盘都挂载在app下，因此，需要使用LVM将三块硬盘合在一起
 

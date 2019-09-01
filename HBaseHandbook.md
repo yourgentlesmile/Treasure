@@ -90,6 +90,9 @@ implicit val kv_ordering = new Ordering[KeyValue] {
 ### Bulkload的时候要多关注HDFS容量
 Bulkload的时候数据大小会膨胀，所以load到HDFS上的时候要关注HDFS容量是否足够
 另外，如果线上HDFS与HBase的**副本数**是2，在load HFile到HDFS上的时候也可以将副本数降为2，避免HFile占用过多的HDFS
+### Bulkload时的副本数
+在Bulkload的时候使用与HBase设置的副本数相同的副本数，因为如果Bulkload时指定的副本数为1，一旦服务器磁盘出现问题，数据将会丢失。在Compaction之前，load上去的HFile都是1个副本。  
+HDFS手动增加文件副本数`hadoop dfs -setrep -w 3 -R /path-to-set`
 ### Bulkload在load HFile时候会对文件进行SPLIT
 当HFile中的数据有跨region的情况存在的时候，会对HFile进行分裂，如果导入表是一个snappy压缩的表，这时候Bulkload会调用客户端本地的snappy对HFile进行分裂，如果客户端本地的snappy native库有问题，**或者java运行的时候没有指定java.library.path，或者那个路径里面没有snappy的so文件**，都会报`java.lang.UnsatisfiedLinkError org.apache.hadoop.util.NativeCodeLoader.buildSupportsSnappy()Z`
 所以，通过在运行java程序的时候加上-Djava.library.path来指定so文件位置之外
