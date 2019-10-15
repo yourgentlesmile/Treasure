@@ -21,6 +21,11 @@
 `useradd -d /app/hadoop hadoop` 创建hadoop用户，并制定用户主目录为`/app/hadoop`  
 `ssh-copy-id -i ~/.ssh/id_rsa.pub 用户名@ip`  讲自己的公钥传到目标机器，达到免密的作用  
 `ls /opt/*.tar | xargs -n1 -I {} mv {} /opt/installer `批量移动特定文件到某个文件夹  
+`awk '/queueTime/{gsub(/^.*queueTime\s*/,"queueTime");print $0}' counter.backup`  提取hbase日志中的命令响应时间情况
+```text
+PUT value: "{\"9351000\":\"\346\210\220\345\212\237\"}" } stale: false partial: false } queueTime: 1 processingTime: 76 totalTime: 77
+```
+`sed -n '1341,1655p' file > result` 将file文件中的第1341行至1655行的内容存入result中
 
 ## 创建LVM
 > 背景：Centos下有3块硬盘，每个20G，现在都要将这三块硬盘都挂载在app下，因此，需要使用LVM将三块硬盘合在一起
@@ -43,14 +48,14 @@
 第二列是挂载点  
 第三列是此分区的文件系统类型  
 第四列是挂载的选项  
-> auto: 系统自动挂载，fstab默认就是这个选项
-defaults: rw, suid, dev, exec, auto, nouser, and async.
-noauto 开机不自动挂载
-nouser 只有超级用户可以挂载
-ro 按只读权限挂载
-rw 按可读可写权限挂载
-user 任何用户都可以挂载
-请注意光驱和软驱只有在装有介质时才可以进行挂载，因此它是noauto  
+> auto: 系统自动挂载，fstab默认就是这个选项  
+defaults: rw, suid, dev, exec, auto, nouser, and async.  
+noauto 开机不自动挂载  
+nouser 只有超级用户可以挂载  
+ro 按只读权限挂载  
+rw 按可读可写权限挂载  
+user 任何用户都可以挂载  
+请注意光驱和软驱只有在装有介质时才可以进行挂载，因此它是noauto
 
 第五列是dump备份设置,当其值设置为1时，将允许dump备份程序备份；设置为0时，忽略备份操作  
 第六列是fsck磁盘检查设置，其值是一个顺序。当其值为0时，永远不检查；而 / 根目录分区永远都为1。其它分区从2开始，数字越小越先检查，如果两个分区的数字相同，则同时检查  
