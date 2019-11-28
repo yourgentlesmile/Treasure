@@ -19,7 +19,7 @@
 `chown [OPTION]... [OWNER][:[GROUP]] FILE...` 更改文件的属主和属组  
 `mkdir -p /usr/bin/test/s`  创建目录，如果父级目录没创建则会一并创建  
 `useradd -d /app/hadoop hadoop` 创建hadoop用户，并制定用户主目录为`/app/hadoop`  
-`ssh-copy-id -i ~/.ssh/id_rsa.pub 用户名@ip`  讲自己的公钥传到目标机器，达到免密的作用  
+`ssh-copy-id -i ~/.ssh/id_rsa.pub 用户名@ip`  将自己的公钥传到目标机器，达到免密的作用  
 `ls /opt/*.tar | xargs -n1 -I {} mv {} /opt/installer `批量移动特定文件到某个文件夹  
 `awk '/queueTime/{gsub(/^.*queueTime\s*/,"queueTime");print $0}' counter.backup`  提取hbase日志中的命令响应时间情况
 ```text
@@ -27,6 +27,7 @@ PUT value: "{\"9351000\":\"\346\210\220\345\212\237\"}" } stale: false partial: 
 ```
 `sed -n '1341,1655p' file > result` 将file文件中的第1341行至1655行的内容存入result中
 
+# LVM相关
 ## 创建LVM
 > 背景：Centos下有3块硬盘，每个20G，现在都要将这三块硬盘都挂载在app下，因此，需要使用LVM将三块硬盘合在一起
 
@@ -59,3 +60,12 @@ user 任何用户都可以挂载
 
 第五列是dump备份设置,当其值设置为1时，将允许dump备份程序备份；设置为0时，忽略备份操作  
 第六列是fsck磁盘检查设置，其值是一个顺序。当其值为0时，永远不检查；而 / 根目录分区永远都为1。其它分区从2开始，数字越小越先检查，如果两个分区的数字相同，则同时检查  
+## 扩容LVM
+> 背景：lvm组中已有一块磁盘(/dev/vdb)100G，现在由于ECS在控制台上对该磁盘进行了扩容，扩容到了1T，需要将逻辑卷`/dev/hadoop/hadooplv`也扩容
+
+1. 先使用pvs查看原大小
+2. pvresize /dev/vdb
+3. 使用vgs与pvs查看vg大小，可以发现已经自动扩容
+4. 使用lvdisplay查看要扩容的lv,并用`lvextend -l +100%FREE /dev/mapper/hadoop-hadooplv`开始扩容lv
+5. 扩容已挂载的卷，xfs文件系统用xfs_growfs，ext*文件系统用resize2fs，由于ECS是ext4的格式，所以使用`resize2fs /dev/mapper/hadoop-hadooplv`进行扩容
+6. 扩容完成
