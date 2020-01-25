@@ -22,6 +22,7 @@
 `ssh-copy-id -i ~/.ssh/id_rsa.pub 用户名@ip`  将自己的公钥传到目标机器，达到免密的作用  
 `ls /opt/*.tar | xargs -n1 -I {} mv {} /opt/installer `批量移动特定文件到某个文件夹  
 `awk '/queueTime/{gsub(/^.*queueTime\s*/,"queueTime");print $0}' counter.backup`  提取hbase日志中的命令响应时间情况
+
 ```text
 PUT value: "{\"9351000\":\"\346\210\220\345\212\237\"}" } stale: false partial: false } queueTime: 1 processingTime: 76 totalTime: 77
 ```
@@ -69,3 +70,33 @@ user 任何用户都可以挂载
 4. 使用lvdisplay查看要扩容的lv,并用`lvextend -l +100%FREE /dev/mapper/hadoop-hadooplv`开始扩容lv
 5. 扩容已挂载的卷，xfs文件系统用xfs_growfs，ext*文件系统用resize2fs，由于ECS是ext4的格式，所以使用`resize2fs /dev/mapper/hadoop-hadooplv`进行扩容
 6. 扩容完成
+
+# Linux运维命令
+
+## vmstat
+
+![image-20200125151303079](F:\IdeaProject\Treasure\Linux\assets\image-20200125151303079.png)
+
+## mpstat
+
+![image-20200125151516298](F:\IdeaProject\Treasure\Linux\assets\image-20200125151516298.png)
+
+## pidstat
+
+![image-20200125151541266](F:\IdeaProject\Treasure\Linux\assets\image-20200125151541266.png)
+
+![image-20200125151612957](F:\IdeaProject\Treasure\Linux\assets\image-20200125151612957.png)
+
+## iostat
+
+磁盘IO   
+
+![image-20200125151942245](F:\IdeaProject\Treasure\Linux\assets\image-20200125151942245.png)
+
+## pidstat
+
+![image-20200125155234997](F:\IdeaProject\Treasure\Linux\assets\image-20200125155234997.png)
+
+## ifstat
+
+查看网络io
