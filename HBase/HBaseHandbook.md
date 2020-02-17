@@ -267,3 +267,17 @@ Previous balancer state : true
 Took 0.3955 seconds                                                             
 => "true"
 ```
+
+## 源码
+
+### 为什么当put操作和delete操作的timestamp相等的时候，会读不到put的数据
+
+https://www.cnblogs.com/cenyuhai/p/3734512.html
+
+是由于KeyValue的排序规则是rowkey(升序) -> ColumnFamily(升序) -> Qualifier(升序) -> timestamp(降序) -> Type(降序)  
+
+又因为，在KeyValue这个类中，定义了每个Type对应的byte值  
+
+![image-20200217221611494](assets/image-20200217221611494.png)  
+
+可以得知，delete是排在put之前的，自然，当delete与put在相同的timestamp的时候，是会被ScanQueryMatcher过滤掉的，从而无法得到数据
