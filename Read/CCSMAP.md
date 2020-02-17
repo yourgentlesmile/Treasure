@@ -1,0 +1,7 @@
+ConcurrentSkipListMap
+
+内部对象种类繁多(使得young区GC的对象扫描成本很高，young GC时晋升对象更多)
+
+新插入的对象在Young区，老对象在old区，当不断插入元素时，内部引用关系会频繁发生变化，(parnew 通过使用CardTable来跟踪old区对young区的引用) (使得young GC时需要扫描的old区域会扩大)
+
+KV长度并不规整，当它晋升到old区，可能产生大量的内存碎片(使得内存碎片化导致的FGC概率升高。当写入的元素较小时，问题会变得更加严重。我们曾对线上的RegionServer进程进行统计，活跃Objects有1亿2千万之多！
