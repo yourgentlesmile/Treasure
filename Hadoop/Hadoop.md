@@ -123,3 +123,56 @@ HDFS中的文件在物理上是分块储存的(Block)，块的大小可以通过
 edits.log记录了每一次元数据的变动  
 
 fsimage是元数据镜像
+
+![image-20200301095009000](assets/image-20200301095009000.png)  
+
+CheckPoint触发条件：  
+
+1、通常SecondaryNameNode每隔一个小时执行一次`dfs.namenode.checkpoint.period = 3600 `  
+
+2、一分钟检查一次操作次数`dfs.namenode.checkpoint.check.period = 60`，当操作次数达到1百万时`dfs.namenode.checkpoint.txns = 1000000`，SecondaryNameNode执行一次。  
+
+> 当namenode启动后，会立即叫Secondary NameNode进行一次合并，如下图所示
+
+![image-20200301100514019](assets/image-20200301100514019.png)  
+
+## DataNode工作机制
+
+当DataNode向NameNode注册成功后。将会每周期(默认1小时)上报该DataNode所有块的信息。  
+
+另外还有心跳机制，DataNode会给NameNode发送心跳包，**心跳返回结果带有NameNode给该DataNode的命令**  
+
+超过10分钟没有收到DataNode的心跳，则认为该节点不可用。  
+
+![image-20200301102412936](assets/image-20200301102412936.png)  
+
+### DN掉线时限参数设置
+
+DataNode进程死亡或者网络故障造成DataNode无法与NameNode通信，NameNode不会立即把该节点判定为死亡，要经过一段时间，这段时间称为超时时长。  
+
+HDFS默认的超时时长为10分钟 + 30秒  
+
+![image-20200301102707131](assets/image-20200301102707131.png)  
+
+```xml
+<property>
+    <name>dfs.namenode.heartbeat.recheck-interval</name>
+    <value>300000</value>
+</property>
+<property>
+    <name> dfs.heartbeat.interval </name>
+    <value>3</value>
+</property>
+```
+
+### 数据完整性
+
+传输一般数据用的是CRC算法，而传输元数据使用的是MD5  
+
+1、当DataNode读取Block的时候，它会计算CheckSum。  
+
+2、如果计算后的CheckSum，与Block创建时值不一样，说明Block已经损坏。  
+
+3、Client读取其他DataNode上的Block。  
+
+4、DataNode在其文件创建后周期验证CheckSum，
