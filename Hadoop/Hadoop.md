@@ -14,13 +14,15 @@
 
 4、处理客户端读写请求；  
 
+5、NameNode内存中保存着所有文件的元数据信息，元数据包括文件路径，文件名，所有者，所属组，权限，创建时间等
+
 ### client
 
 1、文件切分。文件上传HDFS的时候，Client将文件切分成一个一个的Block，然后进行上传；
 
 2、与NameNode交互，获取文件的位置信息；
 
-3、与DataName交互，读取或者写入数据；
+3、与DataNode交互，读取或者写入数据；
 
 4、Client提供一些命令来管理HDFS，比如NameNode格式化；
 
@@ -176,3 +178,21 @@ HDFS默认的超时时长为10分钟 + 30秒
 3、Client读取其他DataNode上的Block。  
 
 4、DataNode在其文件创建后周期验证CheckSum，
+
+# 问答
+
+## HDFS存入大量小文件有什么影响
+
+**元数据层面**：每个小文件都有一份元数据，这些元数据都保存在NameNode内存中。所以小文件过过多，会占用NameNode服务器大量内存，影响NameNode性能和使用寿命。  
+
+**计算层面**：默认情况下MR会对每个小文件启用一个Map任务计算，非常影响计算性能。同时也影响磁盘寻址时间。  
+
+> 一般一个文件的元数据占用在150字节左右，所有有面试官会问，HDFS能存多少个文件 -> NameNode堆内存 / 150字节 = 能存文件数
+
+## HDFS参数调优
+
+1、dfs.namenode.handler.count = 20*log2(cluster size)
+
+> NameNode有一个工作线程池，用来处理不同DataNode的并发心跳以及客户端并发的元数据操作。对于大集群或者有大量客户端的集群来说，通常需要增大参数dfs.namenode.handler.count,其默认值为10.设置该值的一般原则是将其设置为集群大小的自然对数乘以20，即20log(N),N为集群大小
+
+2、编辑日志存储路径dfs.namenode.edits.dir设置与镜像文件存储路径dfs.namenode.name.dir尽量分开，达到最低写入延迟。
