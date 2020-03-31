@@ -20,7 +20,7 @@ Executor有两个核心功能：
 
 # Spark部署流程
 ![image-20200201112610371](assets\image-20200201112610371.png)  
-		不论Spark以何种模式进行部署，任务提交后，都会先启动Driver进程，随后Driver进行向集群管理器注册应用程序，之后集群管理器根据此任务的配置文件分配Executor并启动，当Driver所需的资源全部满足后，Driver开始执行main函数，Spark查询为懒执行，当执行到action算子时开始反向推算，根据宽依赖进行stage的划分，随后每一个stage对应一个taskset，taskset钟有多个task，根据本地化原则，task会被分发到指定的Executor去执行，在任务执行的过程中，Executor也会不断与Driver进行通信，报告任务运行情况。  
+		不论Spark以何种模式进行部署，任务提交后，都会先启动Driver进程，随后Driver进行向集群管理器注册应用程序，之后集群管理器根据此任务的配置文件分配Executor并启动，当Driver所需的资源全部满足后，Driver开始执行main函数，Spark查询为懒执行，当执行到action算子时开始反向推算，根据宽依赖进行stage的划分，随后每一个stage对应一个taskset，taskset中有多个task，根据本地化原则，task会被分发到指定的Executor去执行，在任务执行的过程中，Executor也会不断与Driver进行通信，报告任务运行情况。  
 
 # Spark部署模式
 Spark支持3中集群管理器(Cluster Manager)，分别为:  
@@ -61,7 +61,7 @@ Spark支持3中集群管理器(Cluster Manager)，分别为:
 
 # Spark任务调度概述
 
-​		当Driver起来后，Driver则会根据用户程序逻辑准备任务，并根据Executor资源情况逐步分发任务a.zai详细阐述任务调度前，首先说明下Spark里的几个概念。一个Spark应用程序包括Job,Stage以及Task三个概念：  
+​		当Driver起来后，Driver则会根据用户程序逻辑准备任务，并根据Executor资源情况逐步分发任务在详细阐述任务调度前，首先说明下Spark里的几个概念。一个Spark应用程序包括Job,Stage以及Task三个概念：  
 
 1. Job是以Action算子方法为界，遇到一个Action算子则触发一个Job；  
 2. Stage是Job的子集，以RDD的宽依赖(即Shuffle)为界，遇到Shuffle做一次划分；  

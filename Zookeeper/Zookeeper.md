@@ -55,3 +55,6 @@ start)
 zookeeper的事务日志不能使用vim直接查看，需要通过`org.apache.zookeeper.server.LogFormatter`来进行查看，并且依赖slf4j
 首先将libs中的slf4j-api-1.6.1.jar文件和zookeeper根目录下的zookeeper-3.4.9.jar文件复制到临时文件夹tmplibs中，然后执行如下命令：
 `Java -classpath .:slf4j-api-1.6.1.jar:zookeeper-3.4.9.jar  org.apache.zookeeper.server.LogFormatter   ../Data/datalog/version-2/log.1`
+
+# 一致性协议
+
