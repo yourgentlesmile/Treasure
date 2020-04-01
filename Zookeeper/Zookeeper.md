@@ -1,4 +1,29 @@
+# Zookeeper
+
+## 节点类型
+
+### PERSISTENT-持久化目录节点
+
+客户端与ZK断开连接后，该节点依旧存在  
+
+### PERSISTENT_SEQUENTIAL-持久化顺序编号目录节点
+
+客户端与zookeeper断开连接后，该节点依旧存在，只是Zookeeper给该节点名称进行顺序编号  
+
+### EPHEMERAL-临时目录节点
+
+客户端与zookeeper断开连接后，该节点被删除  
+
+### EPHEMERAL_SEQUENTIAL-临时顺序编号目录节点
+
+客户端与zookeeper断开连接后，该节点被删除，只是zookeeper给该节点名称进行顺序编号  
+
+> 对于持久节点和临时节点，同一个ZNode下，节点的名称是唯一的
+
+
+
 # 日志部分
+
 ## 修改zookeeper快照日志储存位置
 在zoo.cfg中配置dataDir即可
 例如：`dataDir=/opt/zookeeper-3.4.8/logs/data`
@@ -56,5 +81,5 @@ zookeeper的事务日志不能使用vim直接查看，需要通过`org.apache.zo
 首先将libs中的slf4j-api-1.6.1.jar文件和zookeeper根目录下的zookeeper-3.4.9.jar文件复制到临时文件夹tmplibs中，然后执行如下命令：
 `Java -classpath .:slf4j-api-1.6.1.jar:zookeeper-3.4.9.jar  org.apache.zookeeper.server.LogFormatter   ../Data/datalog/version-2/log.1`
 
-# 一致性协议
+
 
