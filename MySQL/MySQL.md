@@ -87,3 +87,43 @@ ROLLBACK TO a; # 回滚到保存点处
 ## SQL_MODE
 
 > 作用是规范SQL语句的书写方式
+
+5.7新增ONLY_FULL_GROUP_BY，规定了如果select中的字段不出现在group by中，则必须以在聚合函数中的形式出现。
+
+例子：  
+
+```sql
+mysql> select department_id,employee_name from employee group by department_id;
+ERROR 1055 (42000): Expression #2 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'offcndb.employee.employee_name' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+```
+
+## 字符集
+
+> 主要说UTF8与UTF8mb4  
+
+UTF8：最大存储长度，单个字符最多3个字节  
+
+UTF8mb4：最大存储长度，单个字符最多4个字节  
+
+差别：  
+
+utf8mb4支持的编码比utf8更多，例如：emoji字符UTF8mb4是支持的，而UTF8不支持。因为emoji表情字符，1个字符占4个字节。  
+
+> 建库的时候指定字符集：create database baseee charset utf8mb4;
+
+每个字符集有多种校对规则(排序规则)
+
+**校对规则**：
+
+影响排序操作。
+
+## 约束
+
+Primary key: 主键约束，作用：唯一 + 非空，每张表只能有一个主键，作为**聚簇索引**  
+
+not null  
+
+unique key : 唯一约束
+
+unsigned ： 针对数字列非负数
+
