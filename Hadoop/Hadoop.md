@@ -34,6 +34,10 @@
 
 1、辅助NameNode，分担其工作量，比如定期合并Fsimages和Edit，并推送给NameNode；
 
+### JournalNode(QJM)
+
+EditLog的存储节点，以及做一些归并操作，Active NameNode会将edit log push到JournalNode。standby NameNode则每两分钟，从journal node pull edit log 到本地进行合并操作。也就是说，进行了主从切换，数据不一致的地方最多就是2分钟之间的数据。
+
 ## HDFS 文件块大小
 
 HDFS中的文件在物理上是分块储存的(Block)，块的大小可以通过配置参数(dfs.blocksize)来规定，**默认大小在Hadoop2.x版本中的128M，老版本是64M**  
@@ -56,25 +60,21 @@ HDFS中的文件在物理上是分块储存的(Block)，块的大小可以通过
 
 ![image-20200229210944061](assets/image-20200229210944061.png)
 
-1、客户端向NameNode申请上传文件。  
+1、客户端调用FileSystem.create()来创建文件。    
 
-2、NameNode响应是否可以上传。  
+2、DistributedFileSystem**使用RPC**调用NameNode节点，在文件系统的命名空间中创建一个新的文件。NameNode节点首先确定文件原来不存在，并且客户端有创建文件的权限，然后创建文件元数据信息，之后返回文件的state。  
 
-3、Client请求上传第一个Block(0~128M)  
+3、DistributedFileSystem根据NN返回的文件state**使用TCP连接**创建DFSOutPutStream并返回给客户端用于写数据。  
 
-4、NameNode返回可以储存数据的DN列表(DN数量取决于设置的副本数)  
+4、客户端开始写数据，DFSOutPutStream将数据分成块，写入data queue。  
 
-> NameNode返回的需要存入数据的DataNode，不是随便返回的，第一个DN是离Client最近的DataNode，后两个是由DN1选出来的
+5、Data Queue由DataStreamer读取，并通知NameNode节点分配DataNode，用来存储数据块(副本默认是3)，分配的DataNode放在一个Pipeline中。  
 
-5、Client请求与DN1建立数据传输通道，与此同时，DN1也与DN2，DN2与DN3建立数据传输通道。  
+6、Data Streamer将数据块写入Pipeline中的第一个DataNode，第一个DataNode将数据发往第二个DataNode，第二个DataNode把数据发往第三个DataNode。  
 
-6、Client向DN1传输Packet每个(64KB)，**当DN1收到Packet的时候，他一边往本地写，一边将数据发往下一个DN**。  
+7、DFSOutPutStream为发出去的数据块保存了ackQueue，等待pipeline中的数据节点告知数据已经写入成功。  
 
-> 注意：Packet发送给下游DN的时候不是等这个packet成功再发下一个，而是放在队列里，当一个packet成功就从队列中移除**(dn1 每传一个 packet 会放入一个应答队列等待应答)**。
-
-7、当最后一个DN落盘成功后，会回复应答成功的信息给上一个DN，以此类推，直到DN1回复给Client  
-
-8、传完所有Block之后，Client告诉NameNode，数据传输完成。  
+8、当客户端结束写入数据，则调用 stream的close函数。此操作将所有的数据块写入pipeline中的DataNode，并等待acoQueue返回成功。最后通知NameNode文件上传完成。  
 
 **注意点：**
 
@@ -85,6 +85,8 @@ HDFS中的文件在物理上是分块储存的(Block)，块的大小可以通过
 2.1、是Client与第一个DN的传输过程中失败，那本次文件上传就失败  
 
 2.2、如果是第一个DN与后续DN传输数据的过程中失败，那上传是可以继续进行的并且返回成功信号。(因为，数据已经传到了第一个DN上，只不过是1副本，如果设置的副本数不为1，则会触发自动备份，第一个DN会继续去寻找其他可用的DN进行备份)  
+
+> 追加写入文件和创建文件流程类似，区别是，第一次创建写入数据到DataNode的流是在当前文件最后一个块对应的机器上进程创建，而写文件是直接随机选择的机器节点。
 
 #### 节点距离计算
 
@@ -189,6 +191,18 @@ HDFS默认的超时时长为10分钟 + 30秒
 
 > 一般一个文件的元数据占用在150字节左右，所有有面试官会问，HDFS能存多少个文件 -> NameNode堆内存 / 150字节 = 能存文件数
 
+### 小文件归档
+
+每个文件均按块存储，每个块的元数据存储在NameNode的内存中，因此HDFS存储小文件会非常低效。**因为大量的小文件会耗尽NameNode中的大部分内存。但注意，存储小文件所需要的磁盘容量和数据块的大小无关。**例如，一个1MB的文件设置为128MB的块存储，实际使用的是1MB的磁盘空间，而不是128MB。  
+
+解决存储小文件：  
+
+HDFS存档文件或HAR文件，是一个更高效的文件存档工具。具体来说，HDFS存档文件对内还是一个一个独立文件，对NameNode而言却是一个整体，减少了NameNode的内存。
+
+> 执行归档命令：hadoop archive -archiveName input.har -p /user/atguigu/input /user/atguigu/output
+>
+> 查看归档内部内容：`hdfs dfs -ls -R har:///user/atguigu/output/input.har`
+
 ## HDFS参数调优
 
 1、dfs.namenode.handler.count = 20*log2(cluster size)
@@ -196,3 +210,4 @@ HDFS默认的超时时长为10分钟 + 30秒
 > NameNode有一个工作线程池，用来处理不同DataNode的并发心跳以及客户端并发的元数据操作。对于大集群或者有大量客户端的集群来说，通常需要增大参数dfs.namenode.handler.count,其默认值为10.设置该值的一般原则是将其设置为集群大小的自然对数乘以20，即20log(N),N为集群大小
 
 2、编辑日志存储路径dfs.namenode.edits.dir设置与镜像文件存储路径dfs.namenode.name.dir尽量分开，达到最低写入延迟。
+
