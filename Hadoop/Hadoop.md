@@ -38,6 +38,10 @@
 
 EditLog的存储节点，以及做一些归并操作，Active NameNode会将edit log push到JournalNode。standby NameNode则每两分钟，从journal node pull edit log 到本地进行合并操作。也就是说，进行了主从切换，数据不一致的地方最多就是2分钟之间的数据。
 
+### ZKFailoverController
+
+
+
 ## HDFS 文件块大小
 
 HDFS中的文件在物理上是分块储存的(Block)，块的大小可以通过配置参数(dfs.blocksize)来规定，**默认大小在Hadoop2.x版本中的128M，老版本是64M**  
@@ -181,6 +185,8 @@ HDFS默认的超时时长为10分钟 + 30秒
 
 4、DataNode在其文件创建后周期验证CheckSum，
 
+
+
 # 问答
 
 ## HDFS存入大量小文件有什么影响
@@ -195,13 +201,23 @@ HDFS默认的超时时长为10分钟 + 30秒
 
 每个文件均按块存储，每个块的元数据存储在NameNode的内存中，因此HDFS存储小文件会非常低效。**因为大量的小文件会耗尽NameNode中的大部分内存。但注意，存储小文件所需要的磁盘容量和数据块的大小无关。**例如，一个1MB的文件设置为128MB的块存储，实际使用的是1MB的磁盘空间，而不是128MB。  
 
-解决存储小文件：  
+解决存储小文件：
+
+### Hadoop Archive
 
 HDFS存档文件或HAR文件，是一个更高效的文件存档工具。具体来说，HDFS存档文件对内还是一个一个独立文件，对NameNode而言却是一个整体，减少了NameNode的内存。
 
 > 执行归档命令：hadoop archive -archiveName input.har -p /user/atguigu/input /user/atguigu/output
 >
 > 查看归档内部内容：`hdfs dfs -ls -R har:///user/atguigu/output/input.har`
+
+### Sequence File
+
+Sequence File 由一系列的二进制key/value组成，如果key为文件名，value为文件内容，则可以将大批小文件合并成一个大文件。
+
+### CombineFileInputFormat
+
+CombineFileInputFormat是一种新的InputFormat，用于将多个文件合并成一个单独的Split，另外，它会考虑数据的存储位置。
 
 ## HDFS参数调优
 
