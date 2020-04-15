@@ -1,4 +1,25 @@
+# Spark基础
+
+## RDD
+
+![image-20200414112814730](assets/image-20200414112814730.png)  
+
+RDD表示只读的分区的数据集，对RDD进行改动，只能通过RDD的转换操作，由一个RDD得到一个新的RDD，新的RDD包含了从其他RDD衍生所必须的信息。RDDs之间存在依赖，RDD的执行时按照血缘关系延时计算的。如果血缘关系较长，可以通过持久化RDD来切断血缘关系。  
+
+> 特点：
+>
+> 一组分区(Partition)，即数据集的基本组成单位
+>
+> 一个计算每个分区的函数
+>
+> RDD之间的依赖关系
+>
+> 一个Partitioner，即RDD的分片函数
+>
+> 一个列表，存储存取每个Partition的优先位置(preferred location)
+
 # Spark核心组件
+
 ## Driver
 Spark驱动器节点，用于执行Spark任务中的main方法，负责实际代码的执行工作。Driver在Spark作业执行时主要负责：  
 1. 将用户程序转化为作业  
